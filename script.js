@@ -18,7 +18,7 @@ customElements.define(
       textarea {width: 50%}
           
       button {
-        background-color:rgb(38, 73, 200); /* Green */
+        background-color:rgb(38, 73, 200);
         border: none;
         border-radius: 4px;
         color: white;
@@ -27,52 +27,78 @@ customElements.define(
         text-decoration: none;
         display: inline-block;
         font-size: 15px;
+        margin-bottom: 8px;
         }
 
       </style>
      
-      <p></p>
       <br>
       <button id="submitBtn">Комментировать</button>
+      <br>
       <div class="comments"></div>
     `;
-      shadowRoot.getElementById("submitBtn").addEventListener("click", () => {
-        const comment = document.createElement("div");
-        comment.className = "comment";
 
+    const clickHandler =  () => {
+      const submitBtn = shadowRoot.getElementById("submitBtn");
+      console.log(submitBtn);
+      submitBtn.style.display = "none";
+
+      const comment = document.createElement("div");
+      // comment.className = "comment";
+
+      // const commentTemplate = document.getElementById("commentTemplate");
+      // const templ = commentTemplate.content.cloneNode(true);
+      // comment.appendChild(templ);
+
+      const br = document.createElement("br");
+      const commentInput = document.createElement("textarea");
+      commentInput.required = true;
+      comment.appendChild(commentInput);
+      comment.appendChild(br);
+
+      const sendButton = document.createElement("button");
+      sendButton.textContent = "Отправить";
+
+      const addCommentHandler = () => {
+        const diveComment = document.createElement("div");
         const commentTemplate = document.getElementById("commentTemplate");
-        const templ = commentTemplate.content.cloneNode(true);
-        comment.appendChild(templ);
+        const content = commentTemplate.content.cloneNode(true);
+        diveComment.appendChild(content);
+        diveComment.querySelector("slot").textContent =
+        commentInput.value;
 
-        shadowRoot.querySelector(".comments").appendChild(comment);
+        if (diveComment.querySelector("slot").textContent === "") {
+          alert("Комментарий не может быть пустым");
+        } else {
+          comment.insertBefore(diveComment, commentInput);
+          commentInput.remove();
+          sendButton.remove();
+        }
+        
+        this.setupListeners(diveComment);
+      }
+      
+      sendButton.addEventListener("click", addCommentHandler);
 
-        this.setupListeners(comment);
-        const submitBtn = shadowRoot.getElementById("submitBtn");
-        console.log(submitBtn);
-        submitBtn.style.display = "none";
-      });
+      comment.appendChild(sendButton);
+
+      shadowRoot.querySelector(".comments").appendChild(comment);
+    }
+
+    shadowRoot
+      .getElementById("submitBtn")
+      .addEventListener("click", clickHandler);
     }
 
     setupListeners(comment) {
-      comment.querySelector(".like-btn").addEventListener("click", () => {
+      const likeHandler = () => {
         const count = comment.querySelector(".like-count");
         count.textContent = parseInt(count.textContent) + 1;
-      });
+      }
 
       const replyHandler = () => {
-        const diveComments = comment.querySelector(".dive-comments");
-        const br = document.createElement("br");
-        const diveCommentInput = document.createElement("textarea");
-        diveCommentInput.required = true;
-        diveComments.appendChild(diveCommentInput);
-        diveComments.appendChild(br);
-        
-        const diveSubmitBtn = document.createElement("button");
-        diveSubmitBtn.textContent = "Отправить";
-        diveComments.appendChild(diveSubmitBtn);
-        diveSubmitBtn.addEventListener("click", () => {
+        const addCommentHandler = () => {
           const diveComment = document.createElement("div");
-          diveComment.className = "comment";
           const commentTemplate = document.getElementById("commentTemplate");
           const content = commentTemplate.content.cloneNode(true);
           diveComment.appendChild(content);
@@ -86,12 +112,32 @@ customElements.define(
             diveSubmitBtn.remove();
           }
           this.setupListeners(diveComment);
-        });
+        }
+
+        const diveComments = comment.querySelector(".dive-comments");
+
+        const br = document.createElement("br");
+
+        const diveCommentInput = document.createElement("textarea");
+        diveCommentInput.required = true;
+
+        diveComments.appendChild(diveCommentInput);
+        diveComments.appendChild(br);
+        
+        const diveSubmitBtn = document.createElement("button");
+        diveSubmitBtn.textContent = "Отправить";
+
+        diveComments.appendChild(diveSubmitBtn);
+        diveSubmitBtn.addEventListener("click", addCommentHandler );
       }
 
       const removeHandler = () => {
         comment.remove();
       }
+
+      comment
+      .querySelector(".like-btn")
+      .addEventListener("click", likeHandler);
 
       comment
         .querySelector(".reply-btn")
